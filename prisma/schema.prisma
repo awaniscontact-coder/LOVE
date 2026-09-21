@@ -10,37 +10,37 @@ datasource db {
 }
 
 model User {
-  id                 String            @id @default(cuid())
-  email              String            @unique
-  name               String?
-  passwordHash       String?
-  emailVerified      DateTime?
-  image              String?
-  role               String            @default("user")
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  creditBalance      Int               @default(10)
-  creditsEarned      Int               @default(10)
-  creditsUsed        Int               @default(0)
-  creditsPurchased   Int               @default(0)
-  creditsGranted     Int               @default(0)
-  dailyGenerationCount Int              @default(0)
-  dailyLimitReset    DateTime?
-  isPremium          Boolean           @default(false)
-  premiumTier        String?
-  premiumSince       DateTime?
-  referralCode       String?           @unique
-  referralSource     String?
-  influencerId       String?
-  influencer         Influencer?       @relation(fields: [influencerId], references: [id])
-  accounts           Account[]
-  sessions           Session[]
-  transactions       CreditTransaction[]
-  generations        Generation[]
-  rewardedAds        RewardedAd[]
-  payments           Payment[]
-  referrals          Referral[]
-  couponRedemptions  CouponRedemption[]
+  id                   String              @id @default(cuid())
+  email                String              @unique
+  name                 String?
+  passwordHash         String?
+  emailVerified        DateTime?
+  image                String?
+  role                 String              @default("user")
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  creditBalance        Int                 @default(10)
+  creditsEarned        Int                 @default(10)
+  creditsUsed          Int                 @default(0)
+  creditsPurchased     Int                 @default(0)
+  creditsGranted       Int                 @default(10)
+  dailyGenerationCount Int                 @default(0)
+  dailyLimitReset      DateTime?
+  isPremium            Boolean             @default(false)
+  premiumTier          String?
+  premiumSince         DateTime?
+  referralCode         String?             @unique
+  referralSource       String?
+  influencerId         String?
+  influencer            Influencer?        @relation(fields: [influencerId], references: [id])
+  accounts             Account[]
+  sessions             Session[]
+  transactions         CreditTransaction[]
+  generations          Generation[]
+  rewardedAds          RewardedAd[]
+  payments             Payment[]
+  referrals            Referral[]
+  couponRedemptions    CouponRedemption[]
 }
 
 model Account {
@@ -56,9 +56,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@unique([provider, providerAccountId])
 }
 
@@ -74,54 +72,52 @@ model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
-
   @@unique([identifier, token])
 }
 
 model Influencer {
-  id            String    @id @default(cuid())
-  name          String
-  username      String    @unique
-  referralCode  String    @unique
-  commissionRate Float    @default(0.10)
-  active        Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  users         User[]
-  referrals     Referral[]
+  id             String     @id @default(cuid())
+  name           String
+  username       String     @unique
+  referralCode   String     @unique
+  commissionRate Float      @default(0.10)
+  active         Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  users          User[]
+  referrals      Referral[]
 }
 
 model Referral {
-  id          String     @id @default(cuid())
-  userId      String
+  id           String      @id @default(cuid())
+  userId       String
   influencerId String?
-  sourceCode  String?
-  createdAt   DateTime   @default(now())
-  expiresAt   DateTime?
-  isActive    Boolean    @default(true)
-
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  influencer Influencer? @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  sourceCode   String?
+  createdAt    DateTime    @default(now())
+  expiresAt    DateTime?
+  isActive     Boolean     @default(true)
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  influencer   Influencer? @relation(fields: [influencerId], references: [id], onDelete: Cascade)
 }
 
 model CouponCode {
-  id              String             @id @default(cuid())
-  code            String             @unique
-  name            String?
-  rewardCredits   Int                @default(20)
-  active          Boolean            @default(true)
-  createdAt       DateTime           @default(now())
-  redemptions     CouponRedemption[]
+  id          String             @id @default(cuid())
+  code        String             @unique
+  name        String?
+  rewardCredits Int              @default(20)
+  active      Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  redemptions CouponRedemption[]
 }
 
 model CouponRedemption {
-  id           String      @id @default(cuid())
+  id           String     @id @default(cuid())
   codeId       String
   userId       String
-  redeemedAt   DateTime    @default(now())
-  rewardAmount Int         @default(20)
-
-  code User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  user CouponCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  redeemedAt   DateTime   @default(now())
+  rewardAmount Int        @default(20)
+  code         CouponCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([codeId, userId])
 }
 
 model CreditTransaction {
@@ -132,8 +128,9 @@ model CreditTransaction {
   description String
   referenceId String?
   createdAt   DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+  @@unique([userId, type, referenceId])
 }
 
 model Generation {
@@ -145,8 +142,8 @@ model Generation {
   response    String
   costCredits Int      @default(0)
   createdAt   DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
 }
 
 model RewardedAd {
@@ -156,8 +153,8 @@ model RewardedAd {
   rewardAmount   Int
   verificationId String   @unique
   createdAt      DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
 }
 
 model Payment {
@@ -165,14 +162,22 @@ model Payment {
   userId         String
   provider       String
   type           String
-  amount         Float
+  amount         Int
   currency       String
   status         String   @default("pending")
-  externalId     String?
+  externalId     String?  @unique
+  productKey     String
   creditsAwarded Int      @default(0)
   createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, status])
+}
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+model StripeEvent {
+  id        String   @id
+  type      String
+  createdAt DateTime @default(now())
 }
 
 model Settings {

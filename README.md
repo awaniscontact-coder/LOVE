@@ -1,31 +1,26 @@
 # LOVE AI
 
-Stack : Next.js + TypeScript + Tailwind + Prisma + PostgreSQL + Anthropic + Stripe-ready.
+## Lancer localement
 
-## Setup
+```bash
+cp .env.example .env
+# définir au minimum NEXTAUTH_SECRET et ANTHROPIC_API_KEY
+# démarrer PostgreSQL :
+docker compose up -d
+npm install
+npx prisma generate
+npx prisma db push
+npm run dev
+```
 
-1. Install dependencies:
-   npm install
-2. Copy `.env.example` to `.env` and fill values.
-3. Create the PostgreSQL database and run:
-   npx prisma db push
-4. Start dev server:
-   npm run dev
+L’application ne crédite jamais le navigateur. Les crédits sont inscrits dans `CreditTransaction` et les opérations sont effectuées dans des transactions PostgreSQL.
 
-## Features included
+### Paiements
 
-- Landing page conversion-focused
-- Authentification via NextAuth + Prisma
-- Générateur d’IA avec Anthropic on-server only
-- Système de crédits avec ledger server-side
-- Limites journalières
-- Récompenses publicitaires validées côté serveur
-- Plan pricing and premium routes
-- Referral tracking with cookies and attribution
-- Admin settings endpoint
+Créer un Checkout via `POST /api/checkout/create` avec `{ "productKey": "credits_100" }`, `credits_500`, `credits_1500`, `premium` ou `premium_plus`. Les prix et le nombre de crédits sont définis côté serveur. Configurer Stripe pour appeler `/api/webhooks/stripe`; les crédits ne sont ajoutés qu’après vérification de la signature et d’un événement `checkout.session.completed` payé. Le traitement est idempotent via `StripeEvent`.
 
-## Important notes
+### Publicités récompensées
 
-- Never trust frontend-only validation.
-- All API keys must be in environment variables.
-- Generation cost is deducted only after successful AI call.
+Le fournisseur doit appeler `/api/webhooks/rewarded-ad` avec `x-reward-signature`, une signature HMAC-SHA256 du corps brut, et `{ userId, provider, verificationId, rewardAmount }`. Le endpoint refuse les appels du navigateur, les doublons et la quatrième récompense de la journée.
+
+En production, utilisez une URL HTTPS, une base PostgreSQL managée, un secret aléatoire, des clés Stripe live uniquement côté serveur, et configurez les limites/rate limiting au niveau du fournisseur d’infrastructure.

@@ -1,21 +1,8 @@
+'use client';
 import Link from 'next/link';
-
+import { FormEvent, useState } from 'react';
 export default function RegisterPage() {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-10 text-white">
-      <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-8">
-        <h1 className="text-3xl font-black">Créer un compte</h1>
-        <p className="mt-2 text-slate-400">Recevez 10 crédits gratuits à l’inscription.</p>
-        <form className="mt-6 space-y-4">
-          <input type="text" placeholder="Nom" className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-white" />
-          <input type="email" placeholder="Email" className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-white" />
-          <input type="password" placeholder="Mot de passe" className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-white" />
-          <button type="submit" className="w-full rounded-full bg-pink-500 px-4 py-3 font-semibold text-white">S’inscrire</button>
-        </form>
-        <p className="mt-6 text-center text-sm text-slate-400">
-          Déjà inscrit ? <Link href="/login" className="text-pink-300">Se connecter</Link>
-        </p>
-      </div>
-    </main>
-  );
+  const [error, setError] = useState(''); const [loading, setLoading] = useState(false);
+  async function submit(e: FormEvent<HTMLFormElement>) { e.preventDefault(); setLoading(true); setError(''); const form = new FormData(e.currentTarget); const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: form.get('name'), email: form.get('email'), password: form.get('password'), referralCode: document.cookie.match(/(?:^|; )referral_source=([^;]+)/)?.[1] }) }); const data = await res.json(); if (!res.ok) setError(data.error || 'Inscription impossible.'); else window.location.href = '/login?registered=1'; setLoading(false); }
+  return <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white"><div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-8"><h1 className="text-3xl font-black">Créer un compte</h1><p className="mt-2 text-slate-400">10 crédits gratuits à l’inscription.</p><form onSubmit={submit} className="mt-6 space-y-4"><input required name="name" minLength={2} placeholder="Nom" className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3" /><input required name="email" type="email" placeholder="Email" className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3" /><input required name="password" minLength={8} type="password" placeholder="Mot de passe (8 caractères minimum)" className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3" />{error && <p className="text-sm text-red-300">{error}</p>}<button disabled={loading} className="w-full rounded-full bg-pink-500 px-4 py-3 font-semibold disabled:opacity-50">{loading ? 'Création...' : 'S’inscrire'}</button></form><p className="mt-6 text-center text-sm text-slate-400">Déjà inscrit ? <Link href="/login" className="text-pink-300">Se connecter</Link></p></div></main>;
 }
