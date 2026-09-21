@@ -1,36 +1,4 @@
 import { getAuthSession } from '@/lib/auth';
+import { prisma } from '@/lib/db';
 import { redirect } from 'next/navigation';
-
-export default async function AdminPage() {
-  const session = await getAuthSession();
-
-  if (!session || session.user.role !== 'admin') {
-    redirect('/login');
-  }
-
-  return (
-    <main className="min-h-screen bg-slate-950 px-4 py-10 text-white md:px-8">
-      <div className="mx-auto max-w-5xl">
-        <h1 className="text-3xl font-black">Administration</h1>
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm text-slate-400">Crédits gratuits</p>
-            <p className="mt-2 text-2xl font-black">10</p>
-          </div>
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm text-slate-400">Limite journalière</p>
-            <p className="mt-2 text-2xl font-black">5 génér.</p>
-          </div>
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm text-slate-400">Publicité récompensée</p>
-            <p className="mt-2 text-2xl font-black">3 max/jour</p>
-          </div>
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-            <p className="text-sm text-slate-400">Message max gratuit</p>
-            <p className="mt-2 text-2xl font-black">1 000 caractères</p>
-          </div>
-        </div>
-      </div>
-    </main>
-  );
-}
+export default async function AdminPage() { const session = await getAuthSession(); if (!session || session.user.role !== 'admin') redirect('/login'); const [settings, users, influencers] = await Promise.all([prisma.settings.findMany({ orderBy: { key: 'asc' } }), prisma.user.count(), prisma.influencer.findMany({ orderBy: { createdAt: 'desc' }, include: { _count: { select: { users: true, referrals: true } } } })]); return <main className="min-h-screen bg-slate-950 px-4 py-10 text-white md:px-8"><div className="mx-auto max-w-6xl"><p className="text-sm uppercase tracking-[.2em] text-pink-300">Administration</p><h1 className="mt-2 text-3xl font-black">Pilotage de la plateforme</h1><div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4"><div className="rounded-3xl border border-slate-800 bg-slate-900 p-6"><p className="text-slate-400">Utilisateurs</p><p className="mt-2 text-3xl font-black">{users}</p></div><div className="rounded-3xl border border-slate-800 bg-slate-900 p-6"><p className="text-slate-400">Influenceurs</p><p className="mt-2 text-3xl font-black">{influencers.length}</p></div><div className="rounded-3xl border border-slate-800 bg-slate-900 p-6"><p className="text-slate-400">Paramètres</p><p className="mt-2 text-3xl font-black">{settings.length}</p></div><div className="rounded-3xl border border-slate-800 bg-slate-900 p-6"><p className="text-slate-400">Bonus inscription</p><p className="mt-2 text-3xl font-black">10</p></div></div><section className="mt-8 rounded-3xl border border-slate-800 bg-slate-900 p-6"><h2 className="text-xl font-bold">Influenceurs</h2><div className="mt-4 space-y-3">{influencers.map(i => <div key={i.id} className="flex flex-wrap justify-between gap-3 rounded-2xl bg-slate-950 p-4"><span>{i.name} <span className="text-slate-500">/{i.username}</span></span><span className="text-sm text-slate-300">{i._count.users} inscrits · {i._count.referrals} referrals · {i.active ? 'Actif' : 'Inactif'}</span></div>)}</div></section></div></main>; }
