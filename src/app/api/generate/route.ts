@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { z } from 'zod';
+import { generateAiReply } from '@/lib/ai-provider';
 
 const schema = z.object({ message: z.string().trim().min(10).max(3000), style: z.enum(['Naturel','Romantique','Flirt','Drôle','Séduisant','Amical','Professionnel','Court','Direct']), length: z.enum(['Court','Standard','Long']) });
 
@@ -20,7 +21,6 @@ export async function POST(req: NextRequest) {
     if (!user.isPremium && user.role !== 'admin' && parsed.message.length > 1000) return NextResponse.json({ error: 'Votre message dépasse la limite gratuite.' }, { status: 400 });
     const cost = parsed.message.length <= 300 ? 1 : parsed.message.length <= 600 ? 2 : parsed.message.length <= 1000 ? 3 : parsed.message.length <= 2000 ? 5 : 8;
     if (user.creditBalance < cost) return NextResponse.json({ error: 'Crédits insuffisants.' }, { status: 402 });
-    const { generateAiReply } = await import('@/lib/anthropic');
     const responses = await generateAiReply(parsed);
     const generationId = crypto.randomUUID();
     const result = await prisma.$transaction(async (tx) => {
